@@ -1,0 +1,126 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Календарь законов — конструктор раскладки</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#eef0f3;color:#1d1d1f}
+.top{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #e3e6ec;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.top h1{font-size:16px;margin:0 12px 0 0}.seg{display:inline-flex;background:#f1f2f5;border:1px solid #e3e6ec;border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:7px;font:inherit;cursor:pointer;color:#4b5465}.seg button.on{background:#fff;color:#1d1d1f;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.btn{border:1px solid #d9dce3;background:#fff;border-radius:9px;padding:7px 12px;font:inherit;cursor:pointer}.btn.pri{background:#1f5fd1;color:#fff;border-color:#1f5fd1;font-weight:600}
+.sp{flex:1}.hint{font-size:12px;color:#5f687a;padding:8px 16px 0}
+.wrap{display:flex;gap:16px;padding:12px 16px 40px;align-items:flex-start}
+.side{width:230px;flex:none;background:#fff;border:1px solid #e3e6ec;border-radius:12px;padding:12px;position:sticky;top:70px}
+.side h3{margin:0 0 8px;font-size:13px}.side .it{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 0;border-top:1px solid #f0f1f4;font-size:13px}
+.side .it button{border:1px solid #d9dce3;background:#fff;border-radius:7px;padding:2px 8px;cursor:pointer;font-size:12px}
+.side .off{color:#9aa0ab}
+.stageBox{flex:1;min-width:0;overflow:auto}
+#stage{position:relative;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);transform-origin:0 0;
+background-image:linear-gradient(to right,rgba(31,95,209,.06) 1px,transparent 1px);background-size:100px 100%}
+.blk{position:absolute;outline:1px dashed transparent;border-radius:6px;user-select:none;touch-action:none}
+.blk:hover,.blk.drag{outline-color:#1f5fd1}.blk.drag{z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:.95}
+.blk.ov{outline:2px solid #e5484d}
+.blk img{display:block;width:100%;height:100%;pointer-events:none}
+.bar{position:absolute;left:0;top:-22px;display:none;gap:4px;align-items:center;background:#1f5fd1;color:#fff;font-size:11px;border-radius:6px 6px 0 0;padding:2px 6px;white-space:nowrap;z-index:2}
+.blk:hover .bar,.blk.drag .bar{display:flex}.bar button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:4px;cursor:pointer;font-size:11px;padding:1px 6px}
+.rz{position:absolute;right:-6px;top:50%;width:12px;height:36px;margin-top:-18px;border-radius:6px;background:#1f5fd1;cursor:ew-resize;display:none}
+.blk:hover .rz,.blk.drag .rz{display:block}
+.note{background:#fff6c7;border:1px solid #f1dc7a;padding:8px;font-size:13px}.note textarea{width:100%;height:100%;border:0;background:none;resize:none;font:inherit;outline:none}
+/* phone */
+#phone{width:390px;background:#fff;border-radius:28px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:14px 12px 30px;margin:0 auto}
+.pb{position:relative;margin:0 0 10px;border-radius:8px;outline:1px dashed transparent;touch-action:none;user-select:none;cursor:grab}
+.pb:hover,.pb.drag{outline-color:#1f5fd1}.pb.drag{z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.2);position:relative}
+.pb img{display:block;width:100%;pointer-events:none}.pb .bar{top:0;left:auto;right:0;border-radius:0 6px 0 6px}.pb:hover .bar{display:flex}
+.ph{height:4px;background:#1f5fd1;border-radius:2px;margin:-7px 0 3px}
+#out{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90;align-items:center;justify-content:center}
+#out .box{background:#fff;border-radius:14px;padding:16px;width:min(640px,92vw)}#out textarea{width:100%;height:280px;font:12px ui-monospace,Menlo,monospace}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#18212a;color:#fff;padding:10px 18px;border-radius:999px;display:none;z-index:99}
+@media(max-width:820px){.side{display:none}.wrap{padding:8px}}
+</style></head><body>
+<div class="top"><h1>Конструктор раскладки · Календарь законов</h1>
+<div class="seg" id="dev"><button data-v="d" class="on">Компьютер</button><button data-v="m">Телефон</button></div>
+<button class="btn" id="addNote">+ Заметка</button><span class="sp"></span>
+<button class="btn" id="reset">Вернуть как было</button><button class="btn pri" id="copy">Скопировать раскладку</button></div>
+<div class="hint" id="hint"></div>
+<div class="wrap"><div class="side"><h3>Блоки</h3><div id="list"></div><p style="font-size:12px;color:#5f687a;margin:10px 0 0">Блоки — снимки прежнего вида на текущих данных за ноябрь 2026. Раскладка сохраняется в этом браузере сама.</p></div>
+<div class="stageBox" id="sb"><div id="stage"></div><div id="phone" style="display:none"></div></div></div>
+<div id="out"><div class="box"><b>Раскладка</b><p style="margin:6px 0;font-size:13px;color:#4b5465">Текст уже скопирован. Если нет — выделите и скопируйте его, затем вставьте в чат группы.</p><textarea id="ta"></textarea><div style="text-align:right;margin-top:8px"><button class="btn" id="close">Закрыть</button></div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const BASE=[{"id": "head", "name": "Заголовок и тема", "x": 0, "y": 0, "w": 1210, "ar": 0.036991368680641186, "mar": 0.10714285714285714, "mw": 100}, {"id": "tabs", "name": "Вкладки и выбор месяца", "x": 0, "y": 40, "w": 520, "ar": 0.08007626310772165, "mar": 0.15608465608465608, "mw": 100}, {"id": "search", "name": "Поиск", "x": 0, "y": 90, "w": 1200, "ar": 0.03598014888337469, "mar": 0.13624338624338625, "mw": 100}, {"id": "btns", "name": "Фильтры и Сохранённые", "x": 0, "y": 130, "w": 210, "ar": 0.18632075471698112, "mar": 0.17415730337078653, "mw": 71}, {"id": "month", "name": "Календарь месяца", "x": 0, "y": 170, "w": 270, "ar": 1.1574074074074074, "mar": 1.2473544973544974, "mw": 100}, {"id": "legend", "name": "Легенда цветов", "x": 0, "y": 480, "w": 280, "ar": 0.3929203539823009, "mar": 0.3664021164021164, "mw": 100}, {"id": "events", "name": "События месяца (день раскрыт)", "x": 290, "y": 170, "w": 920, "ar": 0.4666666666666667, "mar": 1.3240740740740742, "mw": 100}];
+const KEY='kz-konstruktor-v2', W=1200;
+let S, dev='d';
+function fresh(){const P={head:[0,1200],tabs:[0,520],search:[0,1200],btns:[0,210],month:[0,300],events:[320,880],legend:[0,300]};const d=[];let y=0;
+ for(const id of ['head','tabs','search','btns']){d.push({id,x:0,y,w:P[id][1],hid:false});y+=Math.ceil(P[id][1]*B(id).ar/10)*10+10}
+ const top=y;d.push({id:'month',x:0,y:top,w:300,hid:false});d.push({id:'events',x:320,y:top,w:880,hid:false});
+ d.push({id:'legend',x:0,y:top+Math.ceil(300*B('month').ar/10)*10+10,w:300,hid:false});
+ return{d:d.sort((a,b)=>BASE.findIndex(x=>x.id===a.id)-BASE.findIndex(x=>x.id===b.id)),m:BASE.map(b=>({id:b.id,hid:false})),notes:[]}}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const B=id=>BASE.find(b=>b.id===id);
+const $=s=>document.querySelector(s);
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2200)}
+function hgt(d){return d.w*B(d.id).ar}
+function render(){
+ $('#hint').textContent=dev==='d'?'Перетаскивайте блоки мышкой, ширину меняйте синим язычком справа. Глаз скрывает блок, вернуть его можно в списке слева. Сетка — 12 колонок.':'Перетаскивайте блоки вверх и вниз, чтобы поменять порядок на телефоне. Глаз скрывает блок.';
+ document.querySelectorAll('#dev button').forEach(b=>b.classList.toggle('on',b.dataset.v===dev));
+ $('#stage').style.display=dev==='d'?'block':'none';$('#phone').style.display=dev==='m'?'block':'none';
+ const L=$('#list');L.innerHTML='';
+ (dev==='d'?BASE.map(b=>S.d.find(x=>x.id===b.id)):S.m).forEach(d=>{const r=document.createElement('div');r.className='it'+(d.hid?' off':'');r.innerHTML='<span>'+B(d.id).name+'</span>';const bt=document.createElement('button');bt.textContent=d.hid?'Показать':'Скрыть';bt.onclick=()=>{d.hid=!d.hid;save();render()};r.appendChild(bt);L.appendChild(r)});
+ dev==='d'?renderD():renderM();
+}
+function fit(){const sb=$('#sb');const k=Math.min(1,(sb.clientWidth-4)/W);const st=$('#stage');st.style.transform='scale('+k+')';st.dataset.k=k;st.parentElement.style.height='';return k}
+function renderD(){
+ const st=$('#stage');st.innerHTML='';st.style.width=W+'px';
+ let maxY=600;
+ S.d.forEach(d=>{if(d.hid)return;const b=B(d.id);const e=document.createElement('div');e.className='blk';e.dataset.id=d.id;
+  e.style.cssText+=';left:'+d.x+'px;top:'+d.y+'px;width:'+d.w+'px;height:'+hgt(d)+'px';
+  e.innerHTML='<div class="bar">'+b.name+' <button data-a="hide" title="Скрыть">👁 скрыть</button></div><img src="img/d-'+d.id+'.png" alt=""><div class="rz"></div>';
+  st.appendChild(e);maxY=Math.max(maxY,d.y+hgt(d)+40);drag(e,d)});
+ S.notes.forEach((n,i)=>{const e=document.createElement('div');e.className='blk note';e.style.cssText+=';left:'+n.x+'px;top:'+n.y+'px;width:'+n.w+'px;height:'+n.h+'px';
+  e.innerHTML='<div class="bar">Заметка <button data-a="del">удалить</button></div><textarea placeholder="Напишите, что здесь важно"></textarea><div class="rz"></div>';
+  const ta=e.querySelector('textarea');ta.value=n.t||'';ta.oninput=()=>{n.t=ta.value;save()};ta.onpointerdown=ev=>ev.stopPropagation();
+  st.appendChild(e);maxY=Math.max(maxY,n.y+n.h+40);drag(e,n,true,i)});
+ st.style.height=maxY+'px';const k=fit();st.parentElement.style.height=(maxY*k+8)+'px';overlaps();
+}
+function rects(){const r=[];S.d.forEach(d=>{if(!d.hid)r.push([d.id,d.x,d.y,d.w,hgt(d)])});return r}
+function overlaps(){const r=rects();document.querySelectorAll('#stage .blk[data-id]').forEach(e=>{const a=r.find(x=>x[0]===e.dataset.id);const o=r.some(b=>b!==a&&a[1]<b[1]+b[3]-6&&b[1]<a[1]+a[3]-6&&a[2]<b[2]+b[4]-6&&b[2]<a[2]+a[4]-6);e.classList.toggle('ov',o)})}
+function drag(e,d,isNote,ni){
+ e.querySelector('.bar button').onclick=ev=>{ev.stopPropagation();if(isNote){S.notes.splice(ni,1)}else d.hid=true;save();render()};
+ e.querySelector('.bar button').onpointerdown=ev=>ev.stopPropagation();
+ const go=(ev,mode)=>{ev.preventDefault();const k=+$('#stage').dataset.k||1;const sx=ev.clientX,sy=ev.clientY,ox=d.x,oy=d.y,ow=d.w;e.classList.add('drag');
+  const mv=m=>{const dx=(m.clientX-sx)/k,dy=(m.clientY-sy)/k;
+   if(mode==='rz'){d.w=Math.max(100,Math.min(W-d.x,Math.round((ow+dx)/10)*10));e.style.width=d.w+'px';e.style.height=(isNote?d.h:hgt(d))+'px'}
+   else{d.x=Math.max(0,Math.min(W-d.w,Math.round((ox+dx)/10)*10));d.y=Math.max(0,Math.round((oy+dy)/10)*10);e.style.left=d.x+'px';e.style.top=d.y+'px'}
+   if(!isNote)overlaps()};
+  const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);e.classList.remove('drag');if(!isNote){const a=S.d;a.push(a.splice(a.indexOf(d),1)[0])}save();render()};
+  addEventListener('pointermove',mv);addEventListener('pointerup',up)};
+ e.onpointerdown=ev=>{if(ev.target.classList.contains('rz'))go(ev,'rz');else go(ev,'mv')};
+}
+function renderM(){
+ document.getElementById('sb').style.height='';const ph=$('#phone');ph.innerHTML='';
+ S.m.forEach((d,i)=>{if(d.hid)return;const b=B(d.id);const e=document.createElement('div');e.className='pb';e.dataset.i=i;e.style.width=b.mw+'%';
+  e.innerHTML='<div class="bar">'+b.name+' <button>👁 скрыть</button></div><img src="img/m-'+d.id+'.png" alt="">';
+  const bt=e.querySelector('button');bt.onpointerdown=ev=>ev.stopPropagation();bt.onclick=()=>{d.hid=true;save();render()};
+  e.onpointerdown=ev=>mdrag(ev,e,i);ph.appendChild(e)});
+}
+function mdrag(ev,e,i){ev.preventDefault();const sy=ev.clientY;e.classList.add('drag');let tgt=i;
+ const items=[...document.querySelectorAll('#phone .pb')];const mids=items.map(x=>{const r=x.getBoundingClientRect();return[+x.dataset.i,r.top+r.height/2]});
+ const mv=m=>{const dy=m.clientY-sy;e.style.transform='translateY('+dy+'px)';const y=m.clientY;let t=null;for(const [ix,mid] of mids){if(y<mid){t=ix;break}}tgt=t===null?S.m.length:t;
+  document.querySelectorAll('.ph').forEach(x=>x.remove());const ref=items.find(x=>+x.dataset.i===tgt);const p=document.createElement('div');p.className='ph';ref?ref.before(p):$('#phone').appendChild(p)};
+ const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);const it=S.m.splice(i,1)[0];let to=tgt>i?tgt-1:tgt;S.m.splice(to,0,it);save();render()};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up)}
+function describe(){
+ const col=x=>Math.floor(x/100)+1;
+ const dl=S.d.filter(d=>!d.hid).slice().sort((a,b)=>a.y-b.y||a.x-b.x).map(d=>'• '+B(d.id).name+': колонки '+col(d.x)+'–'+col(d.x+d.w-1)+' из 12, отступ сверху '+d.y+' px');
+ const dh=S.d.filter(d=>d.hid).map(d=>B(d.id).name);
+ const ml=S.m.filter(d=>!d.hid).map((d,i)=>(i+1)+'. '+B(d.id).name);const mh=S.m.filter(d=>d.hid).map(d=>B(d.id).name);
+ const notes=S.notes.filter(n=>(n.t||'').trim()).map(n=>'• рядом с колонкой '+col(n.x)+', '+n.y+' px: '+n.t.trim());
+ return 'Раскладка «Календарь законов»\n\nКОМПЬЮТЕР (сверху вниз):\n'+dl.join('\n')+(dh.length?'\nСкрыто: '+dh.join(', '):'')+'\n\nТЕЛЕФОН (порядок):\n'+ml.join('\n')+(mh.length?'\nСкрыто: '+mh.join(', '):'')+(notes.length?'\n\nЗАМЕТКИ:\n'+notes.join('\n'):'')+'\n\nКОД: '+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+}
+$('#copy').onclick=async()=>{const t=describe();$('#ta').value=t;$('#out').style.display='flex';$('#ta').select();try{await navigator.clipboard.writeText(t);toast('Раскладка скопирована')}catch(e){try{document.execCommand('copy')}catch(_){}}};
+$('#close').onclick=()=>$('#out').style.display='none';
+$('#reset').onclick=()=>{if(confirm('Вернуть все блоки на исходные места?')){S=fresh();save();render()}};
+$('#addNote').onclick=()=>{if(dev!=='d'){dev='d'}S.notes.push({x:900,y:20,w:260,h:110,t:''});save();render();toast('Заметка добавлена справа вверху')};
+document.querySelectorAll('#dev button').forEach(b=>b.onclick=()=>{dev=b.dataset.v;render()});
+addEventListener('resize',()=>{if(dev==='d')renderD()});
+S=load()||fresh();render();
+</script></body></html>
